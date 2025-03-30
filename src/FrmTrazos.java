@@ -1,9 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class FrmTrazos extends JFrame {
-    private String[] tipoTrazo = {"Linea", "Rectangulo", "Ovalo"};
+    private String[] tipoTrazo = { "Linea", "Rectangulo", "Ovalo" };
     private JComboBox<String> cmbTipoTrazo;
     private JTextField txtInfo;
     private JPanel pnlDibujo;
@@ -11,7 +14,7 @@ public class FrmTrazos extends JFrame {
     private int xInicio, yInicio, xActual, yActual;
     private boolean trazando = false;
     private Nodo trazoSeleccionado = null;
-    private boolean modoSeleccion = false;  // Variable para controlar el modo selección
+    private boolean modoSeleccion = false; // Variable para controlar el modo selección
 
     public FrmTrazos() {
         setSize(500, 400);
@@ -31,7 +34,8 @@ public class FrmTrazos extends JFrame {
         JButton btnGuardar = new JButton("Guardar", new ImageIcon(getClass().getResource("/IMAGENES/guardar.PNG")));
         JButton btnCargar = new JButton("Cargar", new ImageIcon(getClass().getResource("/IMAGENES/cargar.PNG")));
         JButton btnEliminar = new JButton("Eliminar", new ImageIcon(getClass().getResource("/IMAGENES/eliminar.PNG")));
-        JButton btnSeleccionar = new JButton("Seleccionar", new ImageIcon(getClass().getResource("/IMAGENES/trazar.PNG"))); 
+        JButton btnSeleccionar = new JButton("Seleccionar",
+                new ImageIcon(getClass().getResource("/IMAGENES/trazar.PNG")));
 
         btnGuardar.setBackground(new Color(100, 126, 148));
         btnCargar.setBackground(new Color(204, 255, 153));
@@ -42,6 +46,9 @@ public class FrmTrazos extends JFrame {
         tbTrazos.add(btnCargar);
         tbTrazos.add(btnEliminar);
         tbTrazos.add(btnSeleccionar);
+
+        btnGuardar.addActionListener(e -> guardarDibujo());
+        btnCargar.addActionListener(e -> cargarDibujo());
 
         pnlDibujo = new JPanel() {
             @Override
@@ -65,7 +72,7 @@ public class FrmTrazos extends JFrame {
                 yInicio = me.getY();
                 trazando = true;
             }
-            
+
             public void mouseReleased(MouseEvent me) {
                 trazando = false;
                 xActual = me.getX();
@@ -82,7 +89,7 @@ public class FrmTrazos extends JFrame {
                 repaint();
             }
         });
-        
+
         pnlDibujo.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent me) {
@@ -90,7 +97,7 @@ public class FrmTrazos extends JFrame {
                 repaint();
             }
         });
-        
+
         btnEliminar.addActionListener(e -> {
             if (trazoSeleccionado != null) {
                 listaTrazos.eliminar(trazoSeleccionado);
@@ -99,11 +106,47 @@ public class FrmTrazos extends JFrame {
             }
         });
 
-        
         btnSeleccionar.addActionListener(e -> {
-            modoSeleccion = !modoSeleccion;  // Alterna el estado del modo selección
-            btnSeleccionar.setBackground(modoSeleccion ? Color.RED : new Color(255, 175, 96));  // Cambia el color del botón
+            modoSeleccion = !modoSeleccion; // Alterna el estado del modo selección
+            btnSeleccionar.setBackground(modoSeleccion ? Color.RED : new Color(255, 175, 96)); // Cambia el color del
+                                                                                               // botón
         });
+    }
+
+    private void guardarDibujo() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar Dibujo");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Dibujos (*.dbj)", "dbj"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+
+            // Asegurarse de que tenga la extensión correcta
+            if (!filePath.toLowerCase().endsWith(".dbj")) {
+                fileToSave = new File(filePath + ".dbj");
+            }
+
+            GestorArchivos.guardarTrazos(listaTrazos, fileToSave);
+            txtInfo.setText("Dibujo guardado: " + fileToSave.getName());
+        }
+    }
+
+    private void cargarDibujo() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Cargar Dibujo");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Dibujos (*.dbj)", "dbj"));
+
+        int userSelection = fileChooser.showOpenDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToLoad = fileChooser.getSelectedFile();
+            GestorArchivos.cargarTrazos(listaTrazos, fileToLoad);
+            txtInfo.setText("Dibujo cargado: " + fileToLoad.getName());
+            repaint(); // Redibujar los trazos cargados
+        }
     }
 
     private void agregarTrazo() {
@@ -129,9 +172,17 @@ public class FrmTrazos extends JFrame {
     private void dibujarVistaPrevia(Graphics g) {
         int tipo = cmbTipoTrazo.getSelectedIndex();
         switch (tipo) {
-            case 0: g.drawLine(xInicio, yInicio, xActual, yActual); break;
-            case 1: g.drawRect(Math.min(xInicio, xActual), Math.min(yInicio, yActual), Math.abs(xInicio - xActual), Math.abs(yInicio - yActual)); break;
-            case 2: g.drawOval(Math.min(xInicio, xActual), Math.min(yInicio, yActual), Math.abs(xInicio - xActual), Math.abs(yInicio - yActual)); break;
+            case 0:
+                g.drawLine(xInicio, yInicio, xActual, yActual);
+                break;
+            case 1:
+                g.drawRect(Math.min(xInicio, xActual), Math.min(yInicio, yActual), Math.abs(xInicio - xActual),
+                        Math.abs(yInicio - yActual));
+                break;
+            case 2:
+                g.drawOval(Math.min(xInicio, xActual), Math.min(yInicio, yActual), Math.abs(xInicio - xActual),
+                        Math.abs(yInicio - yActual));
+                break;
         }
     }
 
@@ -140,9 +191,17 @@ public class FrmTrazos extends JFrame {
         while (actual != null) {
             g.setColor(actual == trazoSeleccionado ? Color.RED : Color.WHITE);
             switch (actual.getTipo()) {
-                case 0: g.drawLine(actual.getX1(), actual.getY1(), actual.getX2(), actual.getY2()); break;
-                case 1: g.drawRect(Math.min(actual.getX1(), actual.getX2()), Math.min(actual.getY1(), actual.getY2()), Math.abs(actual.getX1() - actual.getX2()), Math.abs(actual.getY1() - actual.getY2())); break;
-                case 2: g.drawOval(Math.min(actual.getX1(), actual.getX2()), Math.min(actual.getY1(), actual.getY2()), Math.abs(actual.getX1() - actual.getX2()), Math.abs(actual.getY1() - actual.getY2())); break;
+                case 0:
+                    g.drawLine(actual.getX1(), actual.getY1(), actual.getX2(), actual.getY2());
+                    break;
+                case 1:
+                    g.drawRect(Math.min(actual.getX1(), actual.getX2()), Math.min(actual.getY1(), actual.getY2()),
+                            Math.abs(actual.getX1() - actual.getX2()), Math.abs(actual.getY1() - actual.getY2()));
+                    break;
+                case 2:
+                    g.drawOval(Math.min(actual.getX1(), actual.getX2()), Math.min(actual.getY1(), actual.getY2()),
+                            Math.abs(actual.getX1() - actual.getX2()), Math.abs(actual.getY1() - actual.getY2()));
+                    break;
             }
             actual = actual.getSiguiente();
         }

@@ -1,4 +1,7 @@
-class Nodo {
+import java.io.Serializable;
+
+class Nodo implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int x1, y1, x2, y2, tipo;
     private Nodo siguiente;
 

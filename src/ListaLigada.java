@@ -37,4 +37,8 @@ class ListaLigada {
     public Nodo getCabeza() {
         return cabeza;
     }
+
+    public void limpiar() {
+        this.cabeza = null;
+    }
 }
