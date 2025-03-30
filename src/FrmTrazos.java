@@ -108,8 +108,7 @@ public class FrmTrazos extends JFrame {
 
         btnSeleccionar.addActionListener(e -> {
             modoSeleccion = !modoSeleccion; // Alterna el estado del modo selección
-            btnSeleccionar.setBackground(modoSeleccion ? Color.RED : new Color(255, 175, 96)); // Cambia el color del
-                                                                                               // botón
+            btnSeleccionar.setBackground(modoSeleccion ? Color.RED : new Color(255, 175, 96)); // Cambia el color del botón
         });
     }
 
@@ -117,19 +116,20 @@ public class FrmTrazos extends JFrame {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Guardar Dibujo");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Dibujos (*.dbj)", "dbj"));
-
+    
         int userSelection = fileChooser.showSaveDialog(this);
-
+    
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToSave = fileChooser.getSelectedFile();
             String filePath = fileToSave.getAbsolutePath();
-
+    
             // Asegurarse de que tenga la extensión correcta
             if (!filePath.toLowerCase().endsWith(".dbj")) {
                 fileToSave = new File(filePath + ".dbj");
             }
-
-            GestorArchivos.guardarTrazos(listaTrazos, fileToSave);
+    
+            // Guardar los trazos actuales
+            GestorArchivos.guardarTrazos(listaTrazos, fileToSave, this);
             txtInfo.setText("Dibujo guardado: " + fileToSave.getName());
         }
     }

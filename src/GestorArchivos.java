@@ -1,24 +1,39 @@
 import java.io.*;
 import java.util.*;
+import javax.swing.JOptionPane;
 
 public class GestorArchivos {
-    public static void guardarTrazos(ListaLigada listaTrazos, File archivo) {
+    public static void guardarTrazos(ListaLigada listaTrazos, File archivo, FrmTrazos frame) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(archivo))) {
-            Nodo actual = listaTrazos.getCabeza();
-            List<Nodo> trazos = new ArrayList<>();
-            while (actual != null) {
-                trazos.add(new Nodo(actual.getX1(), actual.getY1(), 
-                                   actual.getX2(), actual.getY2(), 
-                                   actual.getTipo()));
-                actual = actual.getSiguiente();
+            // Serializar la lista completa directamente
+            oos.writeObject(serializarLista(listaTrazos));
+            
+            // Limpiar la lista y el panel después de guardar
+            listaTrazos.limpiar();
+            if (frame != null) {
+                frame.repaint(); // Forzar el redibujado del panel vacío
             }
-            oos.writeObject(trazos);
+            
+            // Confirmación de guardado exitoso
+            JOptionPane.showMessageDialog(frame, 
+                "Dibujo guardado exitosamente en: " + archivo.getAbsolutePath(), 
+                "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, 
+            JOptionPane.showMessageDialog(frame, 
                 "Error al guardar el archivo: " + e.getMessage(), 
                 "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private static List<Nodo> serializarLista(ListaLigada lista) {
+        List<Nodo> nodos = new ArrayList<>();
+        Nodo actual = lista.getCabeza();
+        while (actual != null) {
+            nodos.add(actual);
+            actual = actual.getSiguiente();
+        }
+        return nodos;
     }
 
     public static void cargarTrazos(ListaLigada listaTrazos, File archivo) {
@@ -26,12 +41,23 @@ public class GestorArchivos {
             @SuppressWarnings("unchecked")
             List<Nodo> trazos = (List<Nodo>) ois.readObject();
             
-            // Limpiar la lista antes de cargar nuevos trazos
             listaTrazos.limpiar();
             
+            // Reconstruir la lista ligada manteniendo las referencias
+            Nodo anterior = null;
             for (Nodo trazo : trazos) {
-                listaTrazos.agregar(trazo);
+                trazo.setSiguiente(null); // Limpiar referencia temporal
+                if (anterior == null) {
+                    listaTrazos.agregar(trazo);
+                } else {
+                    anterior.setSiguiente(trazo);
+                }
+                anterior = trazo;
             }
+            
+            JOptionPane.showMessageDialog(null, 
+                "Dibujo cargado exitosamente desde: " + archivo.getAbsolutePath(), 
+                "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, 
